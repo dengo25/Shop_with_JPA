@@ -1,5 +1,6 @@
 package com.shop.config;
 
+import com.shop.service.MemberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,20 +14,31 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
   
+  @Autowired
+  MemberService memberService;
   
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
   
-  @Bean //모든 요청 허용 + CSRF 비활성화 (테스트용)
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        .authorizeHttpRequests(auth -> auth
-            .anyRequest().permitAll()
-        )
-        .csrf(csrf -> csrf.disable());
-    
+        .authorizeHttpRequests(authorizeHttpRequestsCustomizer -> authorizeHttpRequestsCustomizer
+            .requestMatchers("/css/**", "/js/**", "/img/**").permitAll()
+            .requestMatchers("/", "/members/**", "/item/**", "/images/**").permitAll()
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .anyRequest()
+            .authenticated()
+        ).formLogin(formLoginCustomizer -> formLoginCustomizer
+            .loginPage("/members/login")
+            .defaultSuccessUrl("/", true)
+            .usernameParameter("email")
+            .failureUrl("/members/login/error"))
+        .exceptionHandling(e -> e
+            .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+        );
     return http.build();
   }
 }
