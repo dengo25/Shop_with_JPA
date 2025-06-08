@@ -15,11 +15,11 @@ public class OrderItem {
   @GeneratedValue
   private Long id;
   
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "item_id")
   private Item item;  //하나의 상품은 여러 상품주문에 포함
   
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id")
   private Order order;
   
